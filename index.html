@@ -488,23 +488,60 @@ function showResult(){
   
   drawRadar(q1,q2,q3,q4,q5);
   
-  // 提交到 Google Sheet
+  // 提交到 Google Sheet（三重保险：fetch + image beacon + hidden form）
   (function(){
     var pKey = getPersonaKeyFromPilot(questions[4].options[answers[4]][1]);
-    document.getElementById('hf_country').value = selectedCountry;
-    document.getElementById('hf_q1').value = questions[0].options[answers[0]][1];
-    document.getElementById('hf_q2').value = questions[1].options[answers[1]][1];
-    document.getElementById('hf_q3').value = questions[2].options[answers[2]][1];
-    document.getElementById('hf_q4').value = questions[3].options[answers[3]][1];
-    document.getElementById('hf_q5').value = questions[4].options[answers[4]][1];
-    document.getElementById('hf_persona').value = personas[pKey] ? personas[pKey].name : pKey;
-    document.getElementById('gsheet_form').submit();
-    console.log('Data submitted to Google Sheet');
+    var vCountry = selectedCountry;
+    var vQ1 = questions[0].options[answers[0]][1];
+    var vQ2 = questions[1].options[answers[1]][1];
+    var vQ3 = questions[2].options[answers[2]][1];
+    var vQ4 = questions[3].options[answers[3]][1];
+    var vQ5 = questions[4].options[answers[4]][1];
+    var vPersona = personas[pKey] ? personas[pKey].name : pKey;
+    
+    // 构建URL参数
+    var params = 'country=' + encodeURIComponent(vCountry) +
+      '&q1=' + encodeURIComponent(vQ1) +
+      '&q2=' + encodeURIComponent(vQ2) +
+      '&q3=' + encodeURIComponent(vQ3) +
+      '&q4=' + encodeURIComponent(vQ4) +
+      '&q5=' + encodeURIComponent(vQ5) +
+      '&persona=' + encodeURIComponent(vPersona);
+    
+    // 方法1：Image Beacon（最可靠，GET方式）
+    try {
+      var img = new Image();
+      img.src = APPS_SCRIPT_URL + '?' + params + '&_t=' + Date.now();
+    } catch(e) { console.log('Image beacon failed:', e); }
+    
+    // 方法2：fetch no-cors（POST方式）
+    try {
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+      }).catch(function(e) { console.log('fetch failed:', e); });
+    } catch(e) { console.log('fetch error:', e); }
+    
+    // 方法3：Hidden form POST（备用）
+    try {
+      document.getElementById('hf_country').value = vCountry;
+      document.getElementById('hf_q1').value = vQ1;
+      document.getElementById('hf_q2').value = vQ2;
+      document.getElementById('hf_q3').value = vQ3;
+      document.getElementById('hf_q4').value = vQ4;
+      document.getElementById('hf_q5').value = vQ5;
+      document.getElementById('hf_persona').value = vPersona;
+      document.getElementById('gsheet_form').submit();
+    } catch(e) { console.log('form submit failed:', e); }
+    
+    console.log('Data submitted to Google Sheet via 3 methods');
     
     // 提交后，自动显示实时统计
     setTimeout(() => {
       toggleLiveStats();
-    }, 1000);
+    }, 2000);
   })();
   
   playCoin();
