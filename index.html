@@ -3,26 +3,137 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI Pulse — Executive Demo v12 (Live Stats)</title>
+<title>AI Pulse — Executive Demo v12 (Supabase)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--magenta:#E20074;--magenta2:#ff2f9a;--bg:#07070b;--panel:#111118;--panel2:#171720;--line:#2c2c37;--text:#fff;--muted:#a9a9b7;--green:#6ad8a7;--gold:#ffd27a;--shadow:0 18px 60px rgba(0,0,0,.42)}
 *{box-sizing:border-box} body{margin:0;font-family:Arial,"Helvetica Neue",sans-serif;color:var(--text);background:radial-gradient(circle at 82% 8%, rgba(226,0,116,.22), transparent 28%),radial-gradient(circle at 8% 92%, rgba(226,0,116,.08), transparent 30%),linear-gradient(180deg,#0a0a0e 0%,#050507 100%);min-height:100vh;overflow-x:hidden} body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.10;background-image:linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 90%)}
-.shell{max-width:1320px;margin:auto;padding:24px 20px 60px} .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px} .brand{display:flex;align-items:center;gap:12px;font-weight:700} .mark{width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,var(--magenta),var(--magenta2));box-shadow:0 0 28px rgba(226,0,116,.35);position:relative} .mark:before,.mark:after{content:"";position:absolute;background:#fff;border-radius:99px} .mark:before{width:15px;height:3px;left:9px;top:9px} .mark:after{width:3px;height:15px;left:15px;top:9px} .badge{padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-size:13px;color:#ddd}
-.hero{border:1px solid rgba(255,255,255,.09);border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));box-shadow:var(--shadow);padding:36px;display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:start;overflow:hidden} .eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:12px;font-weight:700;color:#ffd7eb;margin-bottom:14px} h1{font-size:56px;line-height:1.0;letter-spacing:-2px;margin:0 0 14px} .accent{color:var(--magenta2)} .sub{font-size:17px;line-height:1.5;color:var(--muted);max-width:660px} .hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:24px}
-button{appearance:none;border:none;cursor:pointer;font:inherit;font-weight:700;border-radius:16px;padding:15px 22px;transition:.18s ease} .primary{background:linear-gradient(90deg,var(--magenta),var(--magenta2));color:#fff;box-shadow:0 14px 34px rgba(226,0,116,.26)} .primary:hover{transform:translateY(-2px)} .secondary{background:#23232c;color:#fff;border:1px solid rgba(255,255,255,.08)} .secondary:hover{background:#2a2a36} .primary:disabled{opacity:.35;transform:none;box-shadow:none;cursor:not-allowed} .micro{font-size:13px;color:#c8c8d2}
-.country-panel{background:linear-gradient(180deg,rgba(19,19,26,.96),rgba(15,15,21,.96));border:1px solid var(--line);border-radius:28px;padding:24px;box-shadow:var(--shadow)} .country-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px} .country-title{font-weight:700;font-size:21px} .lang-badge{border:1px solid rgba(226,0,116,.35);background:rgba(226,0,116,.12);color:#ffd7ea;border-radius:999px;padding:8px 12px;font-size:12px} .country-sub{color:#bdbdca;font-size:12px;line-height:1.45;margin-bottom:12px}.touch-hint{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:18px;background:rgba(226,0,116,.09);border:1px solid rgba(226,0,116,.18);margin-bottom:14px}.touch-hint .touch-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,var(--magenta),var(--magenta2));font-size:20px;box-shadow:0 8px 18px rgba(226,0,116,.24)}.touch-hint b{display:block;font-size:14px}.touch-hint span{display:block;color:#d6d6de;font-size:12px;margin-top:3px}
-.flag-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px} .flag-btn{padding:15px;border-radius:22px;background:linear-gradient(180deg,#171720,#111118);border:1px solid #333342;cursor:pointer;transition:.18s ease;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:136px;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)} .flag-btn:hover{transform:translateY(-3px) scale(1.01);border-color:#72728c;box-shadow:0 10px 22px rgba(0,0,0,.28)} .flag-btn.selected{background:linear-gradient(145deg,rgba(226,0,116,.24),#171720);border-color:var(--magenta2);box-shadow:0 0 0 2px rgba(226,0,116,.12) inset,0 12px 26px rgba(226,0,116,.16)} .flag-icon{width:66px;height:66px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#fff;border:2px solid rgba(255,255,255,.12);box-shadow:0 8px 18px rgba(0,0,0,.28)} .flag-icon img{width:100%;height:100%;object-fit:cover;display:block} .flag-name{font-size:14px;font-weight:700;text-align:center}
+
+.shell{max-width:1320px;margin:auto;padding:24px 20px 60px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:700}
+.mark{width:34px;height:34px;border-radius:11px;background:linear-gradient(145deg,var(--magenta),var(--magenta2));box-shadow:0 0 28px rgba(226,0,116,.35);position:relative}
+.mark:before,.mark:after{content:"";position:absolute;background:#fff;border-radius:99px}
+.mark:before{width:15px;height:3px;left:9px;top:9px}
+.mark:after{width:3px;height:15px;left:15px;top:9px}
+.badge{padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-size:13px;color:#ddd}
+
+.hero{border:1px solid rgba(255,255,255,.09);border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));box-shadow:var(--shadow);padding:36px;display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:start;overflow:hidden}
+.eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:12px;font-weight:700;color:#ffd7eb;margin-bottom:14px}
+h1{font-size:56px;line-height:1.0;letter-spacing:-2px;margin:0 0 14px}
+.accent{color:var(--magenta2)}
+.sub{font-size:17px;line-height:1.5;color:var(--muted);max-width:660px}
+.hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:24px}
+button{appearance:none;border:none;cursor:pointer;font:inherit;font-weight:700;border-radius:16px;padding:15px 22px;transition:.18s ease}
+.primary{background:linear-gradient(90deg,var(--magenta),var(--magenta2));color:#fff;box-shadow:0 14px 34px rgba(226,0,116,.26)}
+.primary:hover{transform:translateY(-2px)}
+.secondary{background:#23232c;color:#fff;border:1px solid rgba(255,255,255,.08)}
+.secondary:hover{background:#2a2a36}
+.primary:disabled{opacity:.35;transform:none;box-shadow:none;cursor:not-allowed}
+.micro{font-size:13px;color:#c8c8d2}
+
+.country-panel{background:linear-gradient(180deg,rgba(19,19,26,.96),rgba(15,15,21,.96));border:1px solid var(--line);border-radius:28px;padding:24px;box-shadow:var(--shadow)}
+.country-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.country-title{font-weight:700;font-size:21px}
+.lang-badge{border:1px solid rgba(226,0,116,.35);background:rgba(226,0,116,.12);color:#ffd7ea;border-radius:999px;padding:8px 12px;font-size:12px}
+.country-sub{color:#bdbdca;font-size:12px;line-height:1.45;margin-bottom:12px}
+.touch-hint{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:18px;background:rgba(226,0,116,.09);border:1px solid rgba(226,0,116,.18);margin-bottom:14px}
+.touch-hint .touch-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,var(--magenta),var(--magenta2));font-size:20px;box-shadow:0 8px 18px rgba(226,0,116,.24)}
+.touch-hint b{display:block;font-size:14px}
+.touch-hint span{display:block;color:#d6d6de;font-size:12px;margin-top:3px}
+
+.flag-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.flag-btn{padding:15px;border-radius:22px;background:linear-gradient(180deg,#171720,#111118);border:1px solid #333342;cursor:pointer;transition:.18s ease;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:136px;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.flag-btn:hover{transform:translateY(-3px) scale(1.01);border-color:#72728c;box-shadow:0 10px 22px rgba(0,0,0,.28)}
+.flag-btn.selected{background:linear-gradient(145deg,rgba(226,0,116,.24),#171720);border-color:var(--magenta2);box-shadow:0 0 0 2px rgba(226,0,116,.12) inset,0 12px 26px rgba(226,0,116,.16)}
+.flag-icon{width:66px;height:66px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#fff;border:2px solid rgba(255,255,255,.12);box-shadow:0 8px 18px rgba(0,0,0,.28)}
+.flag-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.flag-name{font-size:14px;font-weight:700;text-align:center}
+
 .privacy-box{margin-top:18px;padding:14px 16px;border-radius:16px;background:#101016;border:1px solid #2e2e39;color:#cfcfda;font-size:12px;line-height:1.55}
 .hidden{display:none!important}
-.quiz-wrap{margin-top:20px} .step-wrap{display:grid;grid-template-columns:240px 1fr;gap:18px;align-items:start} .stairs{background:rgba(17,17,24,.96);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:var(--shadow)} .stairs h3{margin:0 0 14px;font-size:18px} .step{display:flex;align-items:center;gap:12px;margin:10px 0;padding:10px 12px;border-radius:14px;background:#181822;border:1px solid transparent;color:#ddd} .step.current{border-color:var(--magenta2);background:linear-gradient(145deg,rgba(226,0,116,.18),#181822)} .step.done{background:#1b1f26;border-color:#2f3b36} .stepnum{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#2a2a35;color:#fff;flex:0 0 auto} .step.current .stepnum{background:linear-gradient(145deg,var(--magenta),var(--magenta2))} .step.done .stepnum{background:linear-gradient(145deg,#2ab56f,#67d9a7)}
-.panel{background:rgba(17,17,24,.96);border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:var(--shadow);position:relative} .qtitle{font-size:32px;margin:0 0 8px;letter-spacing:-.6px} .qhint{color:var(--muted);margin-bottom:18px} .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px} .option{min-height:110px;padding:18px;border-radius:20px;background:var(--panel2);border:1px solid #353543;display:flex;align-items:center;gap:16px;cursor:pointer;transition:.18s ease;position:relative;overflow:hidden} .option:hover{transform:translateY(-2px);border-color:#5b5b70} .option.selected{background:linear-gradient(145deg,rgba(226,0,116,.22),rgba(23,23,32,1));border-color:var(--magenta2);box-shadow:0 0 0 2px rgba(226,0,116,.14) inset} .option.selected::after{content:"✓";position:absolute;right:16px;top:14px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,var(--gold),#fff1c2);color:#7b4f00;font-weight:800;font-size:14px;box-shadow:0 0 0 6px rgba(255,210,122,.08)} .opt-icon{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:rgba(226,0,116,.16);flex:0 0 auto;font-size:28px} .opt-text b{display:block;font-size:17px;margin-bottom:4px} .opt-text span{display:block;color:var(--muted);font-size:12px;line-height:1.35} .actions{display:flex;justify-content:space-between;gap:12px;margin-top:22px} .pulse-confirm{position:absolute;right:28px;bottom:22px;padding:10px 14px;border-radius:999px;background:rgba(255,210,122,.14);color:#ffe1a6;border:1px solid rgba(255,210,122,.3);font-size:13px;opacity:0;transform:translateY(8px);transition:.2s ease;pointer-events:none} .pulse-confirm.show{opacity:1;transform:translateY(0)}
-.result-wrap{margin-top:20px} #captureTarget{display:grid;grid-template-columns:1.04fr .96fr;gap:18px} .profile-card,.result-card{border-radius:26px;padding:28px;border:1px solid var(--line);box-shadow:var(--shadow)} .profile-card{background:linear-gradient(145deg,rgba(226,0,116,.24),rgba(17,17,24,.99)),radial-gradient(circle at 82% 14%,rgba(255,255,255,.09),transparent 26%);border-color:rgba(226,0,116,.45);position:relative;overflow:hidden} .profile-card:before{content:"MY PROFILE";position:absolute;right:-8px;top:22px;font-size:64px;font-weight:800;letter-spacing:-2px;color:rgba(255,255,255,.035)} .profile-head{display:grid;grid-template-columns:128px 1fr auto;gap:18px;align-items:center} .avatar{width:128px;height:128px;border-radius:28px;background:linear-gradient(145deg,#2a2a36,#171720);border:1px solid rgba(255,255,255,.08);display:grid;place-items:center;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)} .avatar img{width:100%;height:100%;object-fit:cover;display:block} .profile-title small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#ffd7eb;font-weight:700;margin-bottom:8px} .profile-title h2{margin:0;font-size:36px;line-height:1.02;letter-spacing:-1px} .profile-title p{margin:10px 0 0;color:#e7e7eb;font-size:13px;line-height:1.45;max-width:450px} .country-chip{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);min-width:100px;justify-content:center} .country-chip img{width:40px;height:40px;border-radius:50%;display:block} .country-chip .country-txt{font-size:12px;color:#ddd;text-align:left}
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px} .kpi{padding:16px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07)} .kpi small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1.3px} .kpi b{display:block;margin-top:8px;font-size:22px;line-height:1.1} .profile-main-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;margin-top:16px} .summary-panel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:18px} .summary-panel h4{margin:0 0 14px;font-size:14px;letter-spacing:.4px;color:#fff} .micro-tags{display:flex;gap:8px;flex-wrap:wrap} .tag{padding:8px 10px;border-radius:999px;background:#24242e;border:1px solid #363642;color:#fff;font-size:12px} .metric-list{display:grid;grid-template-columns:1fr 1fr;gap:10px} .metric{padding:12px 14px;border-radius:14px;background:#13131a;border:1px solid rgba(255,255,255,.06)} .metric span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px} .metric b{display:block;margin-top:8px;font-size:16px}
-.tool-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px} .tool-btn{padding:10px 14px;border-radius:14px;background:#20202a;border:1px solid rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:700;cursor:pointer} .tool-btn:hover{background:#282834} .result-card{background:linear-gradient(180deg,rgba(17,17,24,.98),rgba(13,13,19,.98))} .result-head{display:flex;justify-content:space-between;align-items:center} .result-head h3{margin:0;font-size:22px} .live{display:flex;align-items:center;gap:8px;color:#d8ffe7;font-size:13px} .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green)}
-.dashboard-grid{display:grid;grid-template-columns:1fr 260px;gap:16px;margin-top:16px} .bar-block,.radar-block,.insight-block{background:#0f1015;border:1px solid var(--line);border-radius:18px;padding:16px} .bar-row{margin:14px 0} .bar-head{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px} .bar{height:12px;background:#2a2a35;border-radius:999px;overflow:hidden} .bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--magenta),var(--magenta2))} .radar-block{display:grid;place-items:center;min-height:296px} .insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px} .mini-kpi{padding:14px;border-radius:14px;background:#13131a;border:1px solid rgba(255,255,255,.06)} .mini-kpi small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1px} .mini-kpi b{display:block;margin-top:8px;font-size:18px} .insight-note{margin-top:12px;padding:13px 14px;border-radius:14px;background:rgba(226,0,116,.08);border:1px solid rgba(226,0,116,.2);color:#f3f3f7;font-size:12px;line-height:1.4} .result-actions{display:flex;justify-content:center;gap:12px;margin-top:22px} .foot{margin-top:16px;text-align:center;color:var(--muted);font-size:12px}
 
-/* 新增：全量统计区域 */
+.quiz-wrap{margin-top:20px}
+.step-wrap{display:grid;grid-template-columns:240px 1fr;gap:18px;align-items:start}
+.stairs{background:rgba(17,17,24,.96);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:var(--shadow)}
+.stairs h3{margin:0 0 14px;font-size:18px}
+.step{display:flex;align-items:center;gap:12px;margin:10px 0;padding:10px 12px;border-radius:14px;background:#181822;border:1px solid transparent;color:#ddd}
+.step.current{background:linear-gradient(145deg,rgba(226,0,116,.18),#181822);border-color:var(--magenta2)}
+.step.done{background:#1b1f26;border-color:#2f3b36}
+.stepnum{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#2a2a35;color:#fff;flex:0 0 auto}
+.step.current .stepnum{background:linear-gradient(145deg,var(--magenta),var(--magenta2))}
+.step.done .stepnum{background:linear-gradient(145deg,#2ab56f,#67d9a7)}
+
+.panel{background:rgba(17,17,24,.96);border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:var(--shadow);position:relative}
+.qtitle{font-size:32px;margin:0 0 8px;letter-spacing:-.6px}
+.qhint{color:var(--muted);margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.option{min-height:110px;padding:18px;border-radius:20px;background:var(--panel2);border:1px solid #353543;display:flex;align-items:center;gap:16px;cursor:pointer;transition:.18s ease;position:relative;overflow:hidden}
+.option:hover{transform:translateY(-2px);border-color:#5b5b70}
+.option.selected{background:linear-gradient(145deg,rgba(226,0,116,.22),rgba(23,23,32,1));border-color:var(--magenta2);box-shadow:0 0 0 2px rgba(226,0,116,.14) inset}
+.option.selected::after{content:"✓";position:absolute;right:16px;top:14px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,var(--gold),#fff1c2);color:#7b4f00;font-weight:800;font-size:14px;box-shadow:0 0 0 6px rgba(255,210,122,.08)}
+.opt-icon{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:rgba(226,0,116,.16);flex:0 0 auto;font-size:28px}
+.opt-text b{display:block;font-size:17px;margin-bottom:4px}
+.opt-text span{display:block;color:var(--muted);font-size:12px;line-height:1.35}
+.actions{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+.pulse-confirm{position:absolute;right:28px;bottom:22px;padding:10px 14px;border-radius:999px;background:rgba(255,210,122,.14);color:#ffe1a6;border:1px solid rgba(255,210,122,.3);font-size:13px;opacity:0;transform:translateY(8px);transition:.2s ease;pointer-events:none}
+.pulse-confirm.show{opacity:1;transform:translateY(0)}
+
+.result-wrap{margin-top:20px}
+#captureTarget{display:grid;grid-template-columns:1.04fr .96fr;gap:18px}
+.profile-card,.result-card{border-radius:26px;padding:28px;border:1px solid var(--line);box-shadow:var(--shadow)}
+.profile-card{background:linear-gradient(145deg,rgba(226,0,116,.24),rgba(17,17,24,.99)),radial-gradient(circle at 82% 14%,rgba(255,255,255,.09),transparent 26%);border-color:rgba(226,0,116,.45);position:relative;overflow:hidden}
+.profile-card:before{content:"MY PROFILE";position:absolute;right:-8px;top:22px;font-size:64px;font-weight:800;letter-spacing:-2px;color:rgba(255,255,255,.035)}
+.profile-head{display:grid;grid-template-columns:128px 1fr auto;gap:18px;align-items:center}
+.avatar{width:128px;height:128px;border-radius:28px;background:linear-gradient(145deg,#2a2a36,#171720);border:1px solid rgba(255,255,255,.08);display:grid;place-items:center;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-title small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#ffd7eb;font-weight:700;margin-bottom:8px}
+.profile-title h2{margin:0;font-size:36px;line-height:1.02;letter-spacing:-1px}
+.profile-title p{margin:10px 0 0;color:#e7e7eb;font-size:13px;line-height:1.45;max-width:450px}
+.country-chip{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);min-width:100px;justify-content:center}
+.country-chip img{width:40px;height:40px;border-radius:50%;display:block}
+.country-chip .country-txt{font-size:12px;color:#ddd;text-align:left}
+
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+.kpi{padding:16px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07)}
+.kpi small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1.3px}
+.kpi b{display:block;margin-top:8px;font-size:22px;line-height:1.1}
+.profile-main-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;margin-top:16px}
+.summary-panel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:18px}
+.summary-panel h4{margin:0 0 14px;font-size:14px;letter-spacing:.4px;color:#fff}
+.micro-tags{display:flex;gap:8px;flex-wrap:wrap}
+.tag{padding:8px 10px;border-radius:999px;background:#24242e;border:1px solid #363642;color:#fff;font-size:12px}
+.metric-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{padding:12px 14px;border-radius:14px;background:#13131a;border:1px solid rgba(255,255,255,.06)}
+.metric span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px}
+.metric b{display:block;margin-top:8px;font-size:16px}
+
+.tool-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.tool-btn{padding:10px 14px;border-radius:14px;background:#20202a;border:1px solid rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+.tool-btn:hover{background:#282834}
+.result-card{background:linear-gradient(180deg,rgba(17,17,24,.98),rgba(13,13,19,.98))}
+.result-head{display:flex;justify-content:space-between;align-items:center}
+.result-head h3{margin:0;font-size:22px}
+.live{display:flex;align-items:center;gap:8px;color:#d8ffe7;font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green)}
+
+.dashboard-grid{display:grid;grid-template-columns:1fr 260px;gap:16px;margin-top:16px}
+.bar-block,.radar-block,.insight-block{background:#0f1015;border:1px solid var(--line);border-radius:18px;padding:16px}
+.bar-row{margin:14px 0}
+.bar-head{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px}
+.bar{height:12px;background:#2a2a35;border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--magenta),var(--magenta2))}
+.radar-block{display:grid;place-items:center;min-height:296px}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mini-kpi{padding:14px;border-radius:14px;background:#13131a;border:1px solid rgba(255,255,255,.06)}
+.mini-kpi small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.mini-kpi b{display:block;margin-top:8px;font-size:18px}
+.insight-note{margin-top:12px;padding:13px 14px;border-radius:14px;background:rgba(226,0,116,.08);border:1px solid rgba(226,0,116,.2);color:#f3f3f7;font-size:12px;line-height:1.4}
+.result-actions{display:flex;justify-content:center;gap:12px;margin-top:22px}
+.foot{margin-top:16px;text-align:center;color:var(--muted);font-size:12px}
+
+/* 全量统计区域 */
 .live-stats{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:26px;padding:28px;margin-top:20px;box-shadow:var(--shadow)}
 .live-stats-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
 .live-stats-head h3{margin:0;font-size:22px;display:flex;align-items:center;gap:10px}
@@ -34,23 +145,30 @@ button{appearance:none;border:none;cursor:pointer;font:inherit;font-weight:700;b
 .chart-box{background:#0f1015;border:1px solid var(--line);border-radius:18px;padding:20px}
 .chart-box h4{margin:0 0 15px;font-size:16px;color:#fff}
 
+/* 提交状态提示 */
+.submit-toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-80px);padding:14px 28px;border-radius:999px;font-size:15px;font-weight:700;z-index:9999;transition:.35s cubic-bezier(.4,0,.2,1);opacity:0;pointer-events:none}
+.submit-toast.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+.submit-toast.success{background:linear-gradient(90deg,#1b7f4f,#2ab56f);color:#fff;box-shadow:0 8px 30px rgba(42,181,111,.35)}
+.submit-toast.error{background:linear-gradient(90deg,#b91c1c,#dc2626);color:#fff;box-shadow:0 8px 30px rgba(220,38,38,.35)}
+
 /* 加载动画 */
 .loading-stats{text-align:center;padding:40px;color:var(--muted)}
 .loading-stats:after{content:'';display:inline-block;width:30px;height:30px;border:3px solid var(--magenta);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-@media(max-width:1080px){.hero{grid-template-columns:1fr}.flag-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.step-wrap{grid-template-columns:1fr}#captureTarget,.dashboard-grid,.profile-main-grid,.stats-charts{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}} @media(max-width:700px){.shell{padding:16px 12px 44px}.hero{padding:28px 20px;border-radius:24px}h1{font-size:40px;letter-spacing:-1.1px}.sub{font-size:15px}.grid{grid-template-columns:1fr}.qtitle{font-size:28px}.profile-head{grid-template-columns:1fr;justify-items:start}.insight-grid{grid-template-columns:1fr}.kpi-row{grid-template-columns:1fr}.flag-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#captureTarget{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr}}
+@media(max-width:1080px){.hero{grid-template-columns:1fr}.flag-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.step-wrap{grid-template-columns:1fr}#captureTarget,.dashboard-grid,.profile-main-grid,.stats-charts{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}} 
+@media(max-width:700px){.shell{padding:16px 12px 44px}.hero{padding:28px 20px;border-radius:24px}h1{font-size:40px;letter-spacing:-1.1px}.sub{font-size:15px}.grid{grid-template-columns:1fr}.qtitle{font-size:28px}.profile-head{grid-template-columns:1fr;justify-items:start}.insight-grid{grid-template-columns:1fr}.kpi-row{grid-template-columns:1fr}.flag-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#captureTarget{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="shell">
   <div class="topbar"><div class="brand"><div class="mark"></div><div>AI Pulse <span style="color:var(--magenta2)">Executive Demo</span></div></div><div class="badge">Touchscreen-ready · Executive flow · Auto Start</div></div>
-  
+
   <section id="intro" class="hero">
     <div><div class="eyebrow">Interactive AI experience</div><h1>Find your <span class="accent">AI profile</span> — and compare it with the crowd.</h1><div class="sub">Choose your country to start. In 5 quick steps, visitors get a personal AI profile and a concise executive audience view.</div><div class="hero-actions"><button class="primary" id="startBtn" onclick="startQuiz()" disabled>Starting...</button><div class="micro" id="startHint">Choose your country to start.</div></div></div>
     <div class="country-panel"><div class="country-head"><div class="country-title">Choose your country</div><div class="lang-badge" id="langMode">English only</div></div><div class="country-sub">Touch a flag to begin. China enables English + Chinese. Other countries remain English-only in this version.</div><div class="touch-hint"><div class="touch-icon">☝️</div><div><b>Select country → Start automatically</b><span>Built for touchscreen exhibition flow</span></div></div><div class="flag-grid" id="flagGrid"></div><div class="privacy-box"><b>Anonymous AI Pulse.</b> We do not ask for your name or email. Your answers are used only in aggregated form to improve demos and explore pilot interest.</div></div>
   </section>
-  
+
   <section id="quiz" class="hidden quiz-wrap">
     <div class="step-wrap">
       <div class="stairs"><h3>5-Step Journey</h3><div id="stepList"></div></div>
@@ -63,7 +181,7 @@ button{appearance:none;border:none;cursor:pointer;font:inherit;font-weight:700;b
       </div>
     </div>
   </section>
-  
+
   <section id="result" class="hidden result-wrap">
     <div id="captureTarget">
       <div class="profile-card">
@@ -86,29 +204,32 @@ button{appearance:none;border:none;cursor:pointer;font:inherit;font-weight:700;b
       <div class="result-card">
         <div class="result-head"><h3>Executive Snapshot</h3><div class="live"><span class="dot"></span> Live</div></div>
         <div class="dashboard-grid">
-          <div><div class="bar-block"><div id="bars"></div></div><div class="insight-block" style="margin-top:14px;"><div class="insight-grid"><div class="mini-kpi"><small>Total Participants</small><b id="miniTotal">1</b></div><div class="mini-kpi"><small>Daily+Agent</small><b id="miniFit">0%</b></div><div class="mini-kpi"><small>Top Choice</small><b id="miniPilot">Home</b></div></div><div class="insight-note" id="insightNote">Live aggregated indicators from this device + cloud data.</div></div></div>
+          <div><div class="bar-block"><div id="bars"></div></div><div class="insight-block" style="margin-top:14px;"><div class="insight-grid"><div class="mini-kpi"><small>Total Participants</small><b id="miniTotal">1</b></div><div class="mini-kpi"><small>Daily+Agent</small><b id="miniFit">0%</b></div><div class="mini-kpi"><small>Top Choice</small><b id="miniPilot">Home</b></div></div><div class="insight-note" id="insightNote">Live aggregated indicators from Supabase cloud data.</div></div></div>
           <div class="radar-block"><canvas id="radar" width="260" height="260"></canvas></div>
         </div>
         <div class="result-actions">
           <button class="secondary" onclick="restartQuiz()">🔄 Restart</button>
           <button class="primary" onclick="downloadResultAsImage()">📱 Save Image</button>
-          <button class="secondary" onclick="viewFullStatistics()" style="margin-left:12px;">📊 View Full Statistics</button>
+          <button class="secondary" onclick="toggleLiveStats()" style="margin-left:12px;">📊 View Statistics</button>
         </div>
       </div>
     </div>
     
-    <!-- 新增：全量实时统计区域 -->
+    <!-- 全量实时统计区域 -->
     <div id="liveStatsSection" class="live-stats hidden">
       <div class="live-stats-head">
         <h3><span class="dot"></span> Live Global Statistics</h3>
         <button class="secondary" onclick="toggleLiveStats()" style="font-size:13px;padding:8px 16px;">Hide</button>
       </div>
       <div id="statsContent">
-        <div class="loading-stats">Loading real-time statistics...</div>
+        <div class="loading-stats">Loading real-time statistics from Supabase...</div>
       </div>
     </div>
   </section>
 </div>
+
+<!-- 提交状态提示 -->
+<div class="submit-toast" id="submitToast"></div>
 
 <script>
 function svgUrl(svg){ return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); }
@@ -119,10 +240,10 @@ const flagSvgs = {
   Czechia: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="50" y="0" fill="#fff"/><rect width="100" height="50" y="50" fill="#d7141a"/><polygon points="0,0 48,50 0,100" fill="#11457e"/></g></svg>`),
   Slovakia: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="33.4" y="0" fill="#fff"/><rect width="100" height="33.3" y="33.4" fill="#0b4ea2"/><rect width="100" height="33.3" y="66.7" fill="#ee1c25"/></g></svg>`),
   Hungary: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="33.4" y="0" fill="#ce2939"/><rect width="100" height="33.3" y="33.4" fill="#fff"/><rect width="100" height="33.3" y="66.7" fill="#477050"/></g></svg>`),
-  Croatia: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="50" y="0" fill="#ff0000"/><rect width="100" height="50" y="50" fill="#fff"/><polygon points="50,10 61,40 93,40 67,58 76,90 50,70 24,90 33,58 7,40 39,40" fill="#ff0000"/></g></svg>`),
+  Croatia: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="50" y="0" fill="#ff0000"/><rect width="100" height="50" y="50" fill="#fff"/><polygon points="50,10 61,40 93,40 63,55 72,82 50,65 28,82 37,55 15,40 42,40" fill="#ff0000"/></g></svg>`),
   Greece: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="100" fill="#0d5eaf"/><rect width="100" height="20" y="0" fill="#fff"/><rect width="100" height="20" y="40" fill="#fff"/><rect width="100" height="20" y="80" fill="#fff"/><rect width="20" height="100" x="0" fill="#fff"/><rect width="20" height="100" x="40" fill="#fff"/><rect width="20" height="100" x="80" fill="#fff"/></g></svg>`),
   'North Macedonia': svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="33.4" y="0" fill="#d20000"/><rect width="100" height="33.3" y="33.4" fill="#1251ae"/><rect width="100" height="33.3" y="66.7" fill="#d20000"/><polygon points="50,15 58,40 85,40 63,55 72,82 50,65 28,82 37,55 15,40 42,40" fill="#ffd500"/></g></svg>`),
-  China: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="100" fill="#de2910"/><polygon points="50,15 59,38 83,38 63,52 71,75 50,60 29,75 37,52 17,38 41,38" fill="#ffde00"/></g></svg>`)
+  China: svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><clipPath id="c"><circle cx="50" cy="50" r="50"/></clipPath><g clip-path="url(#c)"><rect width="100" height="100" fill="#de2910"/><polygon points="50,15 59,38 93,38 63,52 72,75 50,60 28,75 37,52 17,38 41,38" fill="#ffde00"/></g></svg>`)
 };
 const countryInfo={Germany:{local:'English'},Austria:{local:'English'},Poland:{local:'English'},Czechia:{local:'English'},Slovakia:{local:'English'},Hungary:{local:'English'},Croatia:{local:'English'},Greece:{local:'English'},'North Macedonia':{local:'English'},China:{local:'中文 + English'}};
 const countryOrder=['Germany','Austria','Poland','Czechia','Slovakia','Hungary','Croatia','Greece','North Macedonia','China'];
@@ -143,9 +264,15 @@ const personas={
 };
 function getPersonaKeyFromPilot(p){ if(p==='AI Home') return 'home'; if(p==='Cloud + AI') return 'cloud'; if(p==='Work AI') return 'work'; return 'creative'; }
 
+/* ===== Supabase 配置 ===== */
+const SUPABASE_URL = 'https://pbpbcnpnixbgmdqxoznq.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_fAUCvCE6wxkXFla1LgyPug_rlDKPmt5';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ===== 国家选择 ===== */
 function renderFlags(){
   const el=document.getElementById('flagGrid');
-  el.innerHTML=countryOrder.map(c=>`<div class="flag-btn ${selectedCountry===c?'selected':''}" onclick="selectCountry('${c.replace("'","\'")}')"><div class="flag-icon"><img src="${flagSvgs[c]}" alt="${c} flag"></div><div class="flag-name">${c}</div></div>`).join('');
+  el.innerHTML=countryOrder.map(c=>`<div class="flag-btn ${selectedCountry===c?'selected':''}" onclick="selectCountry('${c.replace("'","\\'")}')"><div class="flag-icon"><img src="${flagSvgs[c]}" alt="${c} flag"></div><div class="flag-name">${c}</div></div>`).join('');
 }
 renderFlags();
 
@@ -159,6 +286,7 @@ function selectCountry(country){
   setTimeout(()=>startQuiz(),260);
 }
 
+/* ===== 问卷逻辑 ===== */
 function startQuiz(){
   if(!selectedCountry) return;
   document.getElementById('intro').classList.add('hidden');
@@ -212,12 +340,10 @@ function selectOption(i){
   },420);
 }
 
-function nextQ(){
-  if(current<questions.length-1){ current++; renderQ(); }
-  else showResult();
-}
+function nextQ(){ if(current<questions.length-1){ current++; renderQ(); } else showResult(); }
 function prevQ(){ if(current>0){ current--; renderQ(); } }
 
+/* ===== 音效 ===== */
 function playCoin(){
   try{
     const ctx=new (window.AudioContext||window.webkitAudioContext)();
@@ -228,7 +354,7 @@ function playCoin(){
       o.frequency.setValueAtTime(f,ctx.currentTime+t);
       g.gain.setValueAtTime(0.001,ctx.currentTime+t);
       g.gain.exponentialRampToValueAtTime(0.08,ctx.currentTime+t+0.015);
-      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+d);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+d+0.02);
       o.connect(g); g.connect(ctx.destination);
       o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+d+0.02);
     };
@@ -236,17 +362,16 @@ function playCoin(){
   }catch(e){}
 }
 
+/* ===== 辅助函数 ===== */
 function shortLabel(x){
   return x.replace('Secure & controlled','Security').replace('Local & sovereign','Sovereignty').replace('Telecom Bundle','Bundle').replace('Monthly Plan','Monthly').replace('Token / Credit','Token').replace('Free / Ad-supported','Free').replace('Creative & Coding AI','Creative').replace('Cloud + AI','Cloud');
 }
-
 function aiReadinessLabel(q2){
   if(q2==='Agent / API') return 'Very High';
   if(q2==='Daily') return 'High';
   if(q2==='Weekly') return 'Medium';
   return 'Early';
 }
-
 function tokenPotentialLabel(q1,q2,q4,q5){
   let s=0;
   if(q2==='Agent / API') s+=3;
@@ -258,22 +383,19 @@ function tokenPotentialLabel(q1,q2,q4,q5){
   if(s>=3) return 'Medium';
   return 'Low';
 }
-
 function themeLabel(q3,q5){
   if(q3==='Local & sovereign' || q3==='Secure & controlled') return 'Trust';
   if(q5==='AI Home') return 'Experience';
   if(q5==='Work AI') return 'Productivity';
   return 'Execution';
 }
+function pct(part,total){ if(!total) return 0; return Math.round(part*100/total); }
 
+/* ===== 本地聚合（备用） ===== */
 function getAgg(){
   return JSON.parse(localStorage.getItem('ai_pulse_agg_v8') || '{"total":0,"q1":{},"q2":{},"q3":{},"q4":{},"q5":{}}');
 }
-
-function saveAgg(agg){
-  localStorage.setItem('ai_pulse_agg_v8', JSON.stringify(agg));
-}
-
+function saveAgg(agg){ localStorage.setItem('ai_pulse_agg_v8', JSON.stringify(agg)); }
 function addToAgg(q1,q2,q3,q4,q5){
   const agg=getAgg();
   agg.total += 1;
@@ -283,168 +405,38 @@ function addToAgg(q1,q2,q3,q4,q5){
   saveAgg(agg);
   return agg;
 }
-
 function topKey(obj){
   let best='-'; let max=-1;
-  Object.entries(obj).forEach(([k,v])=>{
-    if(v>max){ max=v; best=k; }
-  });
+  Object.entries(obj).forEach(([k,v])=>{ if(v>max){ max=v; best=k; } });
   return best;
 }
-
-function pct(part,total){
-  if(!total) return 0;
-  return Math.round(part*100/total);
-}
-
 function executiveInsight(q5,total,dailyAgentPct,topChoice){
   return `Participants: ${total}. Daily+Agent: ${dailyAgentPct}%. Current top business choice: ${topChoice}. Your strongest alignment is around ${q5}.`;
 }
 
-//  Google Apps Script URL（替换为你的实际URL）
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4To3L_Z3pf0IrjVNPSHdCJbP1GfxR4G1v_YfFxU1NRTxw51hIlSupQJCxEKoG4CeO/exec';
-
-// 获取实时统计数据
-async function fetchLiveStatistics() {
-  try {
-    const response = await fetch(APPS_SCRIPT_URL + '?action=json');
-    if (!response.ok) throw new Error('Network response was not ok');
-    const stats = await response.json();
-    return stats;
-  } catch (error) {
-    console.error('Error fetching live statistics:', error);
-    return null;
-  }
+/* ===== 显示提交状态提示 ===== */
+function showSubmitToast(msg, isSuccess){
+  const t = document.getElementById('submitToast');
+  t.innerText = msg;
+  t.className = 'submit-toast ' + (isSuccess ? 'success' : 'error');
+  setTimeout(()=> t.classList.add('show'), 10);
+  setTimeout(()=>{ t.classList.remove('show'); }, 3000);
 }
 
-// 显示实时统计数据
-async function showLiveStatistics() {
-  const statsContent = document.getElementById('statsContent');
-  statsContent.innerHTML = '<div class="loading-stats">Loading real-time statistics...</div>';
-  
-  const stats = await fetchLiveStatistics();
-  
-  if (!stats) {
-    statsContent.innerHTML = '<div class="loading-stats">Failed to load statistics. Please try again.</div>';
-    return;
-  }
-  
-  // 生成统计HTML
-  let html = `
-    <div class="stats-grid">
-      <div class="stat-card"><span class="stat-number">${stats.total}</span><span class="stat-label">Total Responses</span></div>
-      <div class="stat-card"><span class="stat-number">${stats.validCount || 0}</span><span class="stat-label">Valid Responses</span></div>
-      <div class="stat-card"><span class="stat-number">${stats.recentWeek}</span><span class="stat-label">Last 7 Days</span></div>
-      <div class="stat-card"><span class="stat-number">${stats.recentMonth}</span><span class="stat-label">Last 30 Days</span></div>
-    </div>
-    
-    <div class="stats-charts">
-      <div class="chart-box">
-        <h4>Average Scores by Dimension</h4>
-        <canvas id="avgChart"></canvas>
-      </div>
-      <div class="chart-box">
-        <h4>Responses by Country</h4>
-        <canvas id="countryChart"></canvas>
-      </div>
-    </div>
-    
-    <div class="stats-charts" style="margin-top:20px;">
-      <div class="chart-box">
-        <h4>Persona Distribution</h4>
-        <canvas id="personaChart"></canvas>
-      </div>
-      <div class="chart-box">
-        <h4>Detailed Statistics</h4>
-        <table class="data-table" style="width:100%;border-collapse:collapse;margin-top:10px;">
-          <tr style="background:#667eea;color:white;"><th style="padding:10px;text-align:left;">Metric</th><th style="padding:10px;text-align:left;">Value</th></tr>
-          <tr><td style="padding:10px;border-bottom:1px solid #eee;">Q1 Average (Strategy)</td><td style="padding:10px;border-bottom:1px solid #eee;">${stats.averages.q1}</td></tr>
-          <tr><td style="padding:10px;border-bottom:1px solid #eee;">Q2 Average (Technology)</td><td style="padding:10px;border-bottom:1px solid #eee;">${stats.averages.q2}</td></tr>
-          <tr><td style="padding:10px;border-bottom:1px solid #eee;">Q3 Average (Execution)</td><td style="padding:10px;border-bottom:1px solid #eee;">${stats.averages.q3}</td></tr>
-          <tr><td style="padding:10px;border-bottom:1px solid #eee;">Q4 Average (Culture)</td><td style="padding:10px;border-bottom:1px solid #eee;">${stats.averages.q4}</td></tr>
-          <tr><td style="padding:10px;">Q5 Average (Impact)</td><td style="padding:10px;">${stats.averages.q5}</td></tr>
-        </table>
-      </div>
-    </div>
-  `;
-  
-  statsContent.innerHTML = html;
-  
-  // 渲染图表
-  setTimeout(() => {
-    // Average Scores Chart
-    new Chart(document.getElementById('avgChart'), {
-      type: 'bar',
-      data: {
-        labels: ['Strategy', 'Technology', 'Execution', 'Culture', 'Impact'],
-        datasets: [{
-          label: 'Average Score',
-          data: [stats.averages.q1, stats.averages.q2, stats.averages.q3, stats.averages.q4, stats.averages.q5],
-          backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe']
-        }]
-      },
-      options: { responsive: true, scales: { y: { beginAtZero: true, max: 5 } } }
-    });
-    
-    // Country Chart
-    const countryLabels = Object.keys(stats.byCountry);
-    const countryData = Object.values(stats.byCountry);
-    new Chart(document.getElementById('countryChart'), {
-      type: 'pie',
-      data: {
-        labels: countryLabels,
-        datasets: [{
-          data: countryData,
-          backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7']
-        }]
-      },
-      options: { responsive: true }
-    });
-    
-    // Persona Chart
-    const personaLabels = Object.keys(stats.byPersona);
-    const personaData = Object.values(stats.byPersona);
-    new Chart(document.getElementById('personaChart'), {
-      type: 'doughnut',
-      data: {
-        labels: personaLabels,
-        datasets: [{
-          data: personaData,
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-        }]
-      },
-      options: { responsive: true }
-    });
-  }, 100);
-}
-
-function toggleLiveStats() {
-  const section = document.getElementById('liveStatsSection');
-  if (section.classList.contains('hidden')) {
-    section.classList.remove('hidden');
-    showLiveStatistics();
-  } else {
-    section.classList.add('hidden');
-  }
-}
-
-function viewFullStatistics() {
-  window.open(APPS_SCRIPT_URL, '_blank', 'width=1200,height=800,scrollbars=yes');
-}
-
-function showResult(){
+/* ===== 显示结果页 ===== */
+async function showResult(){
   document.getElementById('quiz').classList.add('hidden');
   document.getElementById('result').classList.remove('hidden');
-  
+
   const q1=questions[0].options[answers[0]][1];
   const q2=questions[1].options[answers[1]][1];
   const q3=questions[2].options[answers[2]][1];
   const q4=questions[3].options[answers[3]][1];
   const q5=questions[4].options[answers[4]][1];
-  
+
   const pKey=getPersonaKeyFromPilot(q5);
   const persona=personas[pKey];
-  
+
   document.getElementById('personaName').innerText=persona.name;
   document.getElementById('personaDesc').innerText=persona.desc;
   document.getElementById('avatarBox').innerHTML=`<img src="${persona.img}" alt="persona">`;
@@ -459,19 +451,19 @@ function showResult(){
   document.getElementById('aiReadiness').innerText=aiReadinessLabel(q2);
   document.getElementById('tokenPotential').innerText=tokenPotentialLabel(q1,q2,q4,q5);
   document.getElementById('profileTheme').innerText=themeLabel(q3,q5);
-  
+
   // 本地聚合（作为备用）
   const agg=addToAgg(q1,q2,q3,q4,q5);
   const total=agg.total;
   const dailyAgent=(agg.q2['Daily']||0) + (agg.q2['Agent / API']||0);
   const dailyAgentPct=pct(dailyAgent,total);
   const topChoice=shortLabel(topKey(agg.q1));
-  
+
   document.getElementById('miniTotal').innerText=total;
   document.getElementById('miniFit').innerText=`${dailyAgentPct}%`;
   document.getElementById('miniPilot').innerText=topChoice;
   document.getElementById('insightNote').innerText=executiveInsight(q5,total,dailyAgentPct,topChoice);
-  
+
   // 渲染本地条形图
   const barData=[
     {label:'AI Home',value:pct(agg.q1['AI Home']||0,total)},
@@ -485,68 +477,246 @@ function showResult(){
       <div class="bar"><i style="width:${b.value}%"></i></div>
     </div>
   `).join('');
-  
+
   drawRadar(q1,q2,q3,q4,q5);
-  
-  // 提交到 Google Sheet（三重保险：fetch + image beacon + hidden form）
-  (function(){
-    var pKey = getPersonaKeyFromPilot(questions[4].options[answers[4]][1]);
-    var vCountry = selectedCountry;
-    var vQ1 = questions[0].options[answers[0]][1];
-    var vQ2 = questions[1].options[answers[1]][1];
-    var vQ3 = questions[2].options[answers[2]][1];
-    var vQ4 = questions[3].options[answers[3]][1];
-    var vQ5 = questions[4].options[answers[4]][1];
-    var vPersona = personas[pKey] ? personas[pKey].name : pKey;
-    
-    // 构建URL参数
-    var params = 'country=' + encodeURIComponent(vCountry) +
-      '&q1=' + encodeURIComponent(vQ1) +
-      '&q2=' + encodeURIComponent(vQ2) +
-      '&q3=' + encodeURIComponent(vQ3) +
-      '&q4=' + encodeURIComponent(vQ4) +
-      '&q5=' + encodeURIComponent(vQ5) +
-      '&persona=' + encodeURIComponent(vPersona);
-    
-    // 方法1：Image Beacon（最可靠，GET方式）
-    try {
-      var img = new Image();
-      img.src = APPS_SCRIPT_URL + '?' + params + '&_t=' + Date.now();
-    } catch(e) { console.log('Image beacon failed:', e); }
-    
-    // 方法2：fetch no-cors（POST方式）
-    try {
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params
-      }).catch(function(e) { console.log('fetch failed:', e); });
-    } catch(e) { console.log('fetch error:', e); }
-    
-    // 方法3：Hidden form POST（备用）
-    try {
-      document.getElementById('hf_country').value = vCountry;
-      document.getElementById('hf_q1').value = vQ1;
-      document.getElementById('hf_q2').value = vQ2;
-      document.getElementById('hf_q3').value = vQ3;
-      document.getElementById('hf_q4').value = vQ4;
-      document.getElementById('hf_q5').value = vQ5;
-      document.getElementById('hf_persona').value = vPersona;
-      document.getElementById('gsheet_form').submit();
-    } catch(e) { console.log('form submit failed:', e); }
-    
-    console.log('Data submitted to Google Sheet via 3 methods');
-    
-    // 提交后，自动显示实时统计
-    setTimeout(() => {
-      toggleLiveStats();
-    }, 2000);
-  })();
-  
+
+  // ===== 提交到 Supabase =====
+  submitToSupabase(q1, q2, q3, q4, q5, persona.name);
+
+  // 提交后，自动显示实时统计
+  setTimeout(()=>{ toggleLiveStats(); }, 1200);
   playCoin();
 }
 
+/* ===== 提交数据到 Supabase ===== */
+async function submitToSupabase(q1, q2, q3, q4, q5, personaName){
+  try {
+    const { data, error } = await supabase
+      .from('survey_responses')
+      .insert([
+        {
+          country: selectedCountry,
+          q1: parseIntFromOption(q1),
+          q2: parseIntFromOption(q2),
+          q3: parseIntFromOption(q3),
+          q4: parseIntFromOption(q4),
+          q5: parseIntFromOption(q5),
+          persona: personaName,
+          user_agent: navigator.userAgent || '',
+          source: 'github-pages'
+        }
+      ])
+      .select();
+
+    if (error) {
+      console.error('Supabase insert error:', error);
+      showSubmitToast('Submission failed. Please try again.', false);
+    } else {
+      console.log('Supabase insert success:', data);
+      showSubmitToast('Submitted successfully. Thank you!', true);
+    }
+  } catch(err) {
+    console.error('Supabase insert exception:', err);
+    showSubmitToast('Submission failed. Please try again.', false);
+  }
+}
+
+/* 把选项文字转换成数字（1-4） */
+function parseIntFromOption(optText){
+  // 找到对应问题的选项索引
+  for(let qi=0; qi<questions.length; qi++){
+    for(let oi=0; oi<questions[qi].options.length; oi++){
+      if(questions[qi].options[oi][1] === optText){
+        return oi + 1; // 1-based
+      }
+    }
+  }
+  return 0;
+}
+
+/* ===== 从 Supabase 获取实时统计 ===== */
+async function fetchLiveStatistics() {
+  try {
+    // 获取所有数据
+    const { data, error } = await supabase
+      .from('survey_responses')
+      .select('*');
+
+    if (error) {
+      console.error('Supabase select error:', error);
+      return null;
+    }
+
+    const rows = data || [];
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    let total = rows.length;
+    let recentWeek = 0;
+    let recentMonth = 0;
+    let sumQ1=0, sumQ2=0, sumQ3=0, sumQ4=0, sumQ5=0;
+    let validCount = 0;
+    let byCountry = {};
+    let byPersona = {};
+
+    rows.forEach(row => {
+      const ts = new Date(row.created_at);
+      if(ts >= oneWeekAgo) recentWeek++;
+      if(ts >= oneMonthAgo) recentMonth++;
+
+      const c = row.country || 'Unknown';
+      byCountry[c] = (byCountry[c]||0) + 1;
+
+      const p = row.persona || 'Unknown';
+      byPersona[p] = (byPersona[p]||0) + 1;
+
+      if(row.q1 > 0 && row.q2 > 0 && row.q3 > 0 && row.q4 > 0 && row.q5 > 0){
+        sumQ1 += row.q1;
+        sumQ2 += row.q2;
+        sumQ3 += row.q3;
+        sumQ4 += row.q4;
+        sumQ5 += row.q5;
+        validCount++;
+      }
+    });
+
+    const averages = { q1:0, q2:0, q3:0, q4:0, q5:0 };
+    if(validCount > 0){
+      averages.q1 = (sumQ1/validCount).toFixed(2);
+      averages.q2 = (sumQ2/validCount).toFixed(2);
+      averages.q3 = (sumQ3/validCount).toFixed(2);
+      averages.q4 = (sumQ4/validCount).toFixed(2);
+      averages.q5 = (sumQ5/validCount).toFixed(2);
+    }
+
+    return { total, validCount, recentWeek, recentMonth, averages, byCountry, byPersona, lastUpdated: now.toISOString() };
+  } catch(err) {
+    console.error('fetchLiveStatistics error:', err);
+    return null;
+  }
+}
+
+/* ===== 显示实时统计 ===== */
+async function showLiveStatistics() {
+  const statsContent = document.getElementById('statsContent');
+  statsContent.innerHTML = '<div class="loading-stats">Loading real-time statistics from Supabase...</div>';
+
+  const stats = await fetchLiveStatistics();
+
+  if (!stats) {
+    statsContent.innerHTML = '<div class="loading-stats" style="color:#ef4444;">Failed to load statistics. Please try again.</div>';
+    return;
+  }
+
+  let html = `
+    <div class="stats-grid">
+      <div class="stat-card"><span class="stat-number">${stats.total}</span><span class="stat-label">Total Responses</span></div>
+      <div class="stat-card"><span class="stat-number">${stats.validCount || 0}</span><span class="stat-label">Valid Responses</span></div>
+      <div class="stat-card"><span class="stat-number">${stats.recentWeek}</span><span class="stat-label">Last 7 Days</span></div>
+      <div class="stat-card"><span class="stat-number">${stats.recentMonth}</span><span class="stat-label">Last 30 Days</span></div>
+    </div>
+
+    <div class="stats-charts">
+      <div class="chart-box">
+        <h4>Average Scores by Dimension</h4>
+        <canvas id="avgChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <h4>Responses by Country</h4>
+        <canvas id="countryChart"></canvas>
+      </div>
+    </div>
+
+    <div class="stats-charts" style="margin-top:20px;">
+      <div class="chart-box">
+        <h4>Persona Distribution</h4>
+        <canvas id="personaChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <h4>Detailed Statistics</h4>
+        <table style="width:100%;border-collapse:collapse;margin-top:10px;">
+          <tr style="background:#667eea;color:white;"><th style="padding:10px;text-align:left;">Metric</th><th style="padding:10px;text-align:left;">Value</th></tr>
+          <tr><td style="padding:10px;border-bottom:1px solid #eee;">Q1 Average (Need)</td><td style="padding:10px;border-bottom:1px solid #eee;">${stats.averages.q1}</td></tr>
+          <tr><td style="padding:10px;border-bottom:1px solid #eee;">Q2 Average (Usage)</td><td style="padding:10px;border-bottom:1px solid #eee;">${stats.averages.q2}</td></tr>
+          <tr><td style="padding:10px;border-bottom:1px solid #eee;">Q3 Average (Value)</td><td style="padding:10px;border-bottom:1px solid #eee;">${stats.averages.q3}</td></tr>
+          <tr><td style="padding:10px;border-bottom:1px solid #eee;">Q4 Average (Buy)</td><td style="padding:10px;border-bottom:1px solid #eee;">${stats.averages.q4}</td></tr>
+          <tr><td style="padding:10px;">Q5 Average (Pilot)</td><td style="padding:10px;">${stats.averages.q5}</td></tr>
+        </table>
+      </div>
+    </div>
+  `;
+
+  statsContent.innerHTML = html;
+
+  // 渲染图表
+  setTimeout(() => {
+    // Average Scores Chart
+    const avgCtx = document.getElementById('avgChart');
+    if(avgCtx){
+      new Chart(avgCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Need', 'Usage', 'Value', 'Buy', 'Pilot'],
+          datasets: [{
+            label: 'Average Score',
+            data: [stats.averages.q1, stats.averages.q2, stats.averages.q3, stats.averages.q4, stats.averages.q5],
+            backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe']
+          }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true, max: 5 } } }
+      });
+    }
+
+    // Country Chart
+    const countryLabels = Object.keys(stats.byCountry);
+    const countryData = Object.values(stats.byCountry);
+    const countryCtx = document.getElementById('countryChart');
+    if(countryCtx){
+      new Chart(countryCtx, {
+        type: 'pie',
+        data: {
+          labels: countryLabels,
+          datasets: [{
+            data: countryData,
+            backgroundColor: ['#667eea','#764ba2','#f093fb','#4facfe','#00f2fe','#43e97b','#38f9d7']
+          }]
+        },
+        options: { responsive: true }
+      });
+    }
+
+    // Persona Chart
+    const personaLabels = Object.keys(stats.byPersona);
+    const personaData = Object.values(stats.byPersona);
+    const personaCtx = document.getElementById('personaChart');
+    if(personaCtx){
+      new Chart(personaCtx, {
+        type: 'doughnut',
+        data: {
+          labels: personaLabels,
+          datasets: [{
+            data: personaData,
+            backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF']
+          }]
+        },
+        options: { responsive: true }
+      });
+    }
+  }, 100);
+}
+
+function toggleLiveStats() {
+  const section = document.getElementById('liveStatsSection');
+  if (section.classList.contains('hidden')) {
+    section.classList.remove('hidden');
+    showLiveStatistics();
+  } else {
+    section.classList.add('hidden');
+  }
+}
+
+/* ===== 雷达图 ===== */
 function drawRadar(q1,q2,q3,q4,q5){
   const canvas=document.getElementById('radar'),ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,r=82;
   ctx.clearRect(0,0,w,h);
@@ -587,6 +757,7 @@ function drawRadar(q1,q2,q3,q4,q5){
   }
 }
 
+/* ===== 下载图片 ===== */
 function downloadResultAsImage(){
   try{
     const q1=document.getElementById('topInterest').innerText;
@@ -611,11 +782,11 @@ function downloadResultAsImage(){
       const spans=row.querySelectorAll('.bar-head span, .bar-head b');
       return {label:spans[0].innerText, value:parseInt(spans[1].innerText)};
     });
-    
+
     const canvas=document.createElement('canvas');
     canvas.width=1600; canvas.height=940;
     const ctx=canvas.getContext('2d');
-    
+
     function roundRect(x,y,w,h,r,fill,stroke){
       ctx.beginPath();
       ctx.moveTo(x+r,y);
@@ -658,20 +829,20 @@ function downloadResultAsImage(){
         img.src=src;
       });
     }
-    
+
     Promise.all([loadImg(personaImgSrc), loadImg(countryFlagSrc)]).then(([personaImg, countryFlag])=>{
       const bg=ctx.createLinearGradient(0,0,1600,940);
       bg.addColorStop(0,'#09090d'); bg.addColorStop(1,'#050507');
       ctx.fillStyle=bg; ctx.fillRect(0,0,1600,940);
       ctx.fillStyle='rgba(226,0,116,0.14)'; ctx.beginPath(); ctx.arc(1340,110,220,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='rgba(255,255,255,0.03)'; ctx.beginPath(); ctx.arc(1260,120,150,0,Math.PI*2); ctx.fill();
-      
+
       drawText('AI Pulse Executive Result',56,64,34,'#ffffff','700');
       drawText('My AI profile + aggregated audience insight',56,92,15,'#bfc1cb');
-      
+
       roundRect(44,116,790,780,34,'#12131a','rgba(255,255,255,0.10)');
       roundRect(858,116,698,780,34,'#12131a','rgba(255,255,255,0.10)');
-      
+
       drawText('MY AI PROFILE',74,158,17,'#ffd8ec','700');
       roundRect(74,184,138,138,28,'#1f2028','rgba(255,255,255,0.08)');
       ctx.save();
@@ -682,11 +853,11 @@ function downloadResultAsImage(){
       ctx.restore();
       drawText(personaName,234,235,42,'#ffffff','700');
       wrapText(personaDesc,234,270,380,24,18,'#d9d9e1');
-      roundRect(650,190,150,64,18,'rgba(255,255,255,0.05)','rgba(255,255,255,0.08)');
+      roundRect(650,190,150,64,18,'rgba(255,210,122,0.14)','rgba(255,210,122,0.30)');
       ctx.save();
       ctx.beginPath(); ctx.arc(688,222,20,0,Math.PI*2); ctx.clip(); ctx.drawImage(countryFlag,668,202,40,40); ctx.restore();
       drawText(countryName,720,227,18,'#ffffff','700');
-      
+
       const kpiXs=[74,266,458,650];
       const kpiKeys=['USAGE LEVEL','VALUE DRIVER','BUY MODEL','PILOT FOCUS'];
       const kpiVals=[q2,q3,q4,q5];
@@ -695,18 +866,18 @@ function downloadResultAsImage(){
         drawText(kpiKeys[i],kpiXs[i]+20,382,13,'#b8bac6');
         drawText(kpiVals[i],kpiXs[i]+20,424,28,'#ffffff','700');
       }
-      
+
       roundRect(74,486,726,178,24,'rgba(255,255,255,0.05)','rgba(255,255,255,0.08)');
       drawText('KEY PREFERENCES',100,524,18,'#ffd8ec');
       drawText('Top Business Need',100,570,18,'#bfc1cb'); drawText(q1,365,570,18,'#ffffff');
       drawText('AI Readiness',100,610,18,'#bfc1cb'); drawText(readiness,365,610,18,'#ffffff');
       drawText('Token Potential',430,570,18,'#bfc1cb'); drawText(tokenPot,640,570,18,'#ffffff');
       drawText('Profile Theme',430,610,18,'#bfc1cb'); drawText(theme,640,610,18,'#ffffff');
-      
-      roundRect(74,692,726,86,20,'rgba(226,0,116,0.08)','rgba(226,0,116,0.18)');
+
+      roundRect(74,692,726,86,24,'rgba(226,0,116,0.08)','rgba(226,0,116,0.20)');
       drawText('PROFILE TAGS',100,726,16,'#ffd8ec');
-      drawText(tags.join(' • '),100,758,18,'#ffffff');
-      
+      drawText(tags.join(' • '),100,758,19,'#ffffff');
+
       drawText('LIVE AUDIENCE INSIGHTS',888,158,17,'#ffd8ec','700');
       const rightCards=[['RESPONDENTS',total,888],['HEAVY AI USERS',dailyAgent,1116],['LEADING OPPORTUNITY',topChoice,1344]];
       rightCards.forEach(([k,v,x])=>{
@@ -714,7 +885,7 @@ function downloadResultAsImage(){
         drawText(k,x+20,216,13,'#b8bac6');
         drawText(v,x+20,258,30,'#ffffff','700');
       });
-      
+
       roundRect(888,320,638,318,24,'rgba(255,255,255,0.05)','rgba(255,255,255,0.08)');
       drawText('CURRENT PRIORITY SIGNAL',914,358,18,'#ffd8ec');
       bars.forEach((b,i)=>{
@@ -725,13 +896,13 @@ function downloadResultAsImage(){
         const grad=ctx.createLinearGradient(914,0,1438,0); grad.addColorStop(0,'#E20074'); grad.addColorStop(1,'#ff2f9a');
         roundRect(914,y+16,Math.round(524*b.value/100),14,7,grad);
       });
-      
+
       roundRect(888,668,638,146,24,'rgba(226,0,116,0.08)','rgba(226,0,116,0.20)');
       drawText('EXECUTIVE NOTE',914,706,18,'#ffd8ec');
-      drawText(`Respondents: ${total}  ·  Heavy AI users: ${dailyAgent}  ·  Leading signal: ${topChoice}`,914,744,19,'#f3f3f7');
+      drawText(`Participants: ${total}  ·  Heavy AI users: ${dailyAgent}  ·  Leading signal: ${topChoice}`,914,744,19,'#f3f3f7');
       drawText(`Best-fit direction: ${q5}  ·  Readiness: ${readiness}.`,914,780,19,'#f3f3f7');
       drawText('AI Pulse v12 · Deutsche Telekom style executive card',56,920,13,'#8f92a0');
-      
+
       const dataUrl=canvas.toDataURL('image/png');
       const a=document.createElement('a');
       a.href=dataUrl;
@@ -749,6 +920,7 @@ function downloadResultAsImage(){
   }
 }
 
+/* ===== 重新开始 ===== */
 function restartQuiz(){
   selectedCountry=null; current=0; answers=[];
   document.getElementById('result').classList.add('hidden');
@@ -761,18 +933,5 @@ function restartQuiz(){
   renderFlags();
 }
 </script>
-
-<!-- 隐藏表单：提交数据到 Google Apps Script（无CORS问题） -->
-<iframe name="hidden_iframe" style="display:none;"></iframe>
-<form id="gsheet_form" target="hidden_iframe" method="POST" action="https://script.google.com/macros/s/AKfycby4To3L_Z3pf0IrjVNPSHdCJbP1GfxR4G1v_YfFxU1NRTxw51hIlSupQJCxEKoG4CeO/exec" style="display:none;">
-  <input type="hidden" name="country" id="hf_country">
-  <input type="hidden" name="q1" id="hf_q1">
-  <input type="hidden" name="q2" id="hf_q2">
-  <input type="hidden" name="q3" id="hf_q3">
-  <input type="hidden" name="q4" id="hf_q4">
-  <input type="hidden" name="q5" id="hf_q5">
-  <input type="hidden" name="persona" id="hf_persona">
-</form>
-
 </body>
 </html>
